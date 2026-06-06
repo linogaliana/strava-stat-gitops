@@ -1,21 +1,21 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: titanic-deployment
+  name: api-deployment
   labels:
-    app: titanic
+    app: strava-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: titanic
+      app: strava-api
   template:
     metadata:
       labels:
-        app: titanic
+        app: strava-api
     spec:
       containers:
-      - name: titanic
+      - name: strava-api
         image: linogaliana/strava-dashboard-api:v0.0.1
         ports:
         - containerPort: 8000
