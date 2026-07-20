@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: strava-api
-        image: linogaliana/strava-dashboard-api:v0.0.23
+        image: linogaliana/strava-dashboard-api:v0.0.25
         ports:
         - containerPort: 8000
         resources:
