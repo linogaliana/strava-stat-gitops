@@ -1,10 +1,34 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: strava-api-service
+  name: strava-auth-api-service
 spec:
   selector:
-    app: strava-api
+    app: strava-auth-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: strava-data-api-service
+spec:
+  selector:
+    app: strava-data-api
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: strava-sync-api-service
+spec:
+  selector:
+    app: strava-sync-api
   ports:
     - protocol: TCP
       port: 80

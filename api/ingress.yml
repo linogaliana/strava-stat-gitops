@@ -1,3 +1,15 @@
+# Un seul domaine, routé par chemin vers les trois services : le front
+# (config.json : une seule URL) et le callback OAuth déclaré chez Strava
+# (https://strava-dashboard-api.lab.sspcloud.fr/auth/callback) ne changent pas.
+#
+#   /auth, /garmin/auth                            → auth-api
+#   /sync, /garmin/sync, /summary,
+#   /streams, /segments, /photos                   → sync-api
+#   / (reste : /data, /config, /health, /docs…)    → data-api
+#
+# pathType Prefix compare segment par segment (/sync couvre /sync/jobs/…, pas
+# /syncfoo) et le préfixe le plus long l'emporte (/garmin/auth vs /garmin/sync,
+# /sync vs /).
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -17,10 +29,69 @@ spec:
   - host: strava-dashboard-api.lab.sspcloud.fr
     http:
       paths:
+      # ── auth-api ────────────────────────────────────────────────────
+      - path: /auth
+        pathType: Prefix
+        backend:
+          service:
+            name: strava-auth-api-service
+            port:
+              number: 80
+      - path: /garmin/auth
+        pathType: Prefix
+        backend:
+          service:
+            name: strava-auth-api-service
+            port:
+              number: 80
+      # ── sync-api ────────────────────────────────────────────────────
+      - path: /sync
+        pathType: Prefix
+        backend:
+          service:
+            name: strava-sync-api-service
+            port:
+              number: 80
+      - path: /garmin/sync
+        pathType: Prefix
+        backend:
+          service:
+            name: strava-sync-api-service
+            port:
+              number: 80
+      - path: /summary
+        pathType: Prefix
+        backend:
+          service:
+            name: strava-sync-api-service
+            port:
+              number: 80
+      - path: /streams
+        pathType: Prefix
+        backend:
+          service:
+            name: strava-sync-api-service
+            port:
+              number: 80
+      - path: /segments
+        pathType: Prefix
+        backend:
+          service:
+            name: strava-sync-api-service
+            port:
+              number: 80
+      - path: /photos
+        pathType: Prefix
+        backend:
+          service:
+            name: strava-sync-api-service
+            port:
+              number: 80
+      # ── data-api ────────────────────────────────────────────────────
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: strava-api-service
+            name: strava-data-api-service
             port:
               number: 80

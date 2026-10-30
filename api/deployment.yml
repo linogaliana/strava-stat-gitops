@@ -1,24 +1,132 @@
+# Trois services issus de la même image, chacun lancé avec sa propre commande
+# (cf. README de strava-dashboard, section « Architecture : trois services »).
+#
+# - auth-api : OAuth Strava/Garmin. Garde en mémoire les connexions OAuth en
+#   cours → 1 seul réplica, pas de --workers.
+# - data-api : lecture des Parquet publiés sur S3 (proxy pour DuckDB WASM).
+# - sync-api : appels Strava + écriture S3. La sync tourne dans un
+#   sous-processus du pod : c'est lui qui a besoin de mémoire. Les jobs sont
+#   en mémoire : un redéploiement interrompt une sync en cours.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: api-deployment
+  name: auth-api-deployment
   labels:
-    app: strava-api
+    app: strava-auth-api
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: strava-api
+      app: strava-auth-api
   template:
     metadata:
       labels:
-        app: strava-api
+        app: strava-auth-api
     spec:
       containers:
-      - name: strava-api
-        image: linogaliana/strava-dashboard-api:v0.0.47
+      - name: strava-auth-api
+        image: linogaliana/strava-dashboard-api:v0.1.0
+        command: ["uvicorn", "src.server.apps.auth:app", "--host", "0.0.0.0", "--port", "8000"]
         ports:
         - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 50m
+            memory: 256Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-api-deployment
+  labels:
+    app: strava-data-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: strava-data-api
+  template:
+    metadata:
+      labels:
+        app: strava-data-api
+    spec:
+      containers:
+      - name: strava-data-api
+        image: linogaliana/strava-dashboard-api:v0.1.0
+        command: ["uvicorn", "src.server.apps.data:app", "--host", "0.0.0.0", "--port", "8000"]
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          timeoutSeconds: 5
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 2Gi
+          requests:
+            cpu: 100m
+            memory: 512Mi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sync-api-deployment
+  labels:
+    app: strava-sync-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: strava-sync-api
+  template:
+    metadata:
+      labels:
+        app: strava-sync-api
+    spec:
+      containers:
+      - name: strava-sync-api
+        image: linogaliana/strava-dashboard-api:v0.1.0
+        command: ["uvicorn", "src.server.apps.sync:app", "--host", "0.0.0.0", "--port", "8000"]
+        ports:
+        - containerPort: 8000
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          timeoutSeconds: 5
+        # Mêmes ressources que l'ancienne API unique : la sync (intersections
+        # géographiques) tourne ici.
         resources:
           limits:
             cpu: 1000m
