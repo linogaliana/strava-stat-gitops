@@ -25,7 +25,7 @@ spec:
     spec:
       containers:
       - name: strava-auth-api
-        image: linogaliana/strava-dashboard-api:v0.1.0
+        image: linogaliana/strava-dashboard-api:v0.3.0
         command: ["uvicorn", "src.server.apps.auth:app", "--host", "0.0.0.0", "--port", "8000"]
         ports:
         - containerPort: 8000
@@ -67,7 +67,7 @@ spec:
     spec:
       containers:
       - name: strava-data-api
-        image: linogaliana/strava-dashboard-api:v0.1.0
+        image: linogaliana/strava-dashboard-api:v0.3.0
         command: ["uvicorn", "src.server.apps.data:app", "--host", "0.0.0.0", "--port", "8000"]
         ports:
         - containerPort: 8000
@@ -109,7 +109,7 @@ spec:
     spec:
       containers:
       - name: strava-sync-api
-        image: linogaliana/strava-dashboard-api:v0.1.0
+        image: linogaliana/strava-dashboard-api:v0.3.0
         command: ["uvicorn", "src.server.apps.sync:app", "--host", "0.0.0.0", "--port", "8000"]
         ports:
         - containerPort: 8000
